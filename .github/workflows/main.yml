@@ -53,10 +53,16 @@ jobs:
         run: |
           mkdir -p publish
           find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
+          
+          # Клонируем opkg-utils
           git clone https://git.openwrt.org/project/opkg-lede.git
-          cd opkg-lede/utils
-          sudo make install
-          cd ../../publish
+          
+          # Копируем нужный скрипт вручную в $PATH
+          sudo cp opkg-lede/utils/opkg-make-index /usr/local/bin/
+          sudo chmod +x /usr/local/bin/opkg-make-index
+          
+          # Генерация индекса
+          cd publish
           opkg-make-index . > Packages
           gzip -k Packages
 
