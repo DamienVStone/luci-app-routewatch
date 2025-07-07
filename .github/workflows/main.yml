@@ -32,10 +32,10 @@ jobs:
       - name: Debug package folder
         run: |
           # ls -l $GITHUB_WORKSPACE/
-          # ls -l buildroot/sdk/
+          ls -l buildroot/sdk/
           ls -l buildroot/sdk/package/
           # ls -l buildroot/sdk/package/luci-app-routewatch/
-          ls -l buildroot/sdk/package/scripts/
+          ls -l buildroot/sdk/scripts/
 
       - name: Update and install feeds
         run: |
