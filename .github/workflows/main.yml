@@ -53,31 +53,17 @@ jobs:
         run: |
           mkdir -p publish
 
-          # Копируем все .ipk.gz (возможно так сгенерированы пакеты)
-          find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk*" -exec cp {} publish/ \;
+          # Копируем IPK-пакеты
+          find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
 
           echo "=== IPK files ==="
           ls -l publish/
           file publish/*
 
+          # Используем встроенный скрипт SDK для генерации индекса
+          cp buildroot/sdk/scripts/gen_packages.py publish/
           cd publish
-
-          # Распаковываем, если это .ipk.gz
-          # for f in *.ipk; do
-          #   echo "Unzipping $f"
-          #   gunzip -k "$f"  # сохраняем исходный .ipk.gz и создаём .ipk
-          # done
-
-          # Проверим тип файлов (должен быть Debian binary package)
-          file *.ipk
-
-          # Клонируем утилиту
-          cd ..
-          git clone https://github.com/shr-project/opkg-utils.git
-
-          # Генерация индекса
-          cd publish
-          python3 ../opkg-utils/opkg-make-index . > Packages
+          python3 gen_packages.py . > Packages
           gzip -k Packages
 
       - name: Deploy to GitHub Pages
