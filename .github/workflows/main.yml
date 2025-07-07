@@ -62,11 +62,11 @@ jobs:
 
           cd publish
 
-          # Распаковываем, если это .ipk.gz
-          for f in *.ipk.gz; do
-            echo "Unzipping $f"
-            gunzip -k "$f"  # сохраняем исходный .ipk.gz и создаём .ipk
-          done
+          # # Распаковываем, если это .ipk.gz
+          # for f in *.ipk.gz; do
+          #   echo "Unzipping $f"
+          #   gunzip -k "$f"  # сохраняем исходный .ipk.gz и создаём .ipk
+          # done
 
           # Проверим тип файлов (должен быть Debian binary package)
           file *.ipk
