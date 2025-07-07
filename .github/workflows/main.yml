@@ -56,6 +56,10 @@ jobs:
           # Копируем все .ipk.gz (возможно так сгенерированы пакеты)
           find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk*" -exec cp {} publish/ \;
 
+          echo "=== IPK files ==="
+          ls -l publish/
+          file publish/*
+
           cd publish
 
           # Распаковываем, если это .ipk.gz
