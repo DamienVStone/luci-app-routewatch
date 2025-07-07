@@ -38,7 +38,9 @@ jobs:
 
       - name: Build IPK
         run: |
+          cp $GITHUB_WORKSPACE/.config buildroot/sdk/.config
           cd buildroot/sdk
+          make defconfig
           make package/luci-app-routewatch/compile -j$(nproc) V=s
 
       - name: Prepare publish artifacts
