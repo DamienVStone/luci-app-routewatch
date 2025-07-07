@@ -23,26 +23,30 @@ jobs:
         mkdir sdk
         mv openwrt-sdk-* sdk
 
+    - name: Prepare SDK & Copy package
+      run: |
+        cd buildroot/sdk
+        mkdir -p package/luci-app-routewatch
+        cp -r $GITHUB_WORKSPACE/* package/luci-app-routewatch/
+        make defconfig
+
     - name: Build IPK
       run: |
         cd buildroot/sdk
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
-        cp -r $GITHUB_WORKSPACE package/luci-app-routewatch
-        make defconfig
         make package/luci-app-routewatch/compile -j$(nproc) V=s
 
-    - name: Upload packages to gh-pages
+    - name: Prepare publish artifacts
       run: |
         mkdir -p publish
-        cp buildroot/sdk/bin/packages/*/*/luci-app-routewatch*.ipk publish/
+        find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
         cd publish
+        apt-get update && apt-get install -y opkg-utils
         opkg-make-index . > Packages
         gzip -k Packages
 
-    - name: Push to gh-pages
+    - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./publish
         publish_branch: gh-pages
+        publish_dir: ./publish
