@@ -49,20 +49,29 @@ jobs:
           make defconfig
           make package/luci-app-routewatch/compile -j$(nproc) V=s
 
-      - name: Extract real .ipk and index
+      - name: Prepare IPK files and index
         run: |
           mkdir -p publish
+
+          # Копируем все .ipk.gz (возможно так сгенерированы пакеты)
           find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk*" -exec cp {} publish/ \;
 
-          # Распаковка, если нужно
           cd publish
+
+          # Распаковываем, если это .ipk.gz
           for f in *.ipk.gz; do
-            [ -e "$f" ] && gunzip -k "$f"
+            echo "Unzipping $f"
+            gunzip -k "$f"  # сохраняем исходный .ipk.gz и создаём .ipk
           done
 
-          # Генерация индекса
+          # Проверим тип файлов (должен быть Debian binary package)
+          file *.ipk
+
+          # Клонируем утилиту
           cd ..
           git clone https://github.com/shr-project/opkg-utils.git
+
+          # Генерация индекса
           cd publish
           python3 ../opkg-utils/opkg-make-index . > Packages
           gzip -k Packages
