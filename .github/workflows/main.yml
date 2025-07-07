@@ -3,7 +3,7 @@ name: Build luci-app-routewatch
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   workflow_dispatch:
 
 jobs:
@@ -11,42 +11,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Set up OpenWRT SDK
-      run: |
-        mkdir buildroot
-        cd buildroot
-        wget https://downloads.openwrt.org/releases/24.10.0/targets/x86/64/openwrt-sdk-24.10.0-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-        tar -xf openwrt-sdk-*.tar.zst
-        mkdir sdk
-        mv openwrt-sdk-* sdk
+      - name: Set up OpenWRT SDK
+        run: |
+          mkdir buildroot
+          cd buildroot
+          wget https://downloads.openwrt.org/releases/24.10.0/targets/x86/64/openwrt-sdk-24.10.0-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+          tar -xf openwrt-sdk-*.tar.zst
+          mkdir sdk
+          mv openwrt-sdk-* sdk
 
-    - name: Prepare SDK & Copy package
-      run: |
-        cd buildroot/sdk
-        mkdir -p package/luci-app-routewatch
-        cp -r $GITHUB_WORKSPACE/* package/luci-app-routewatch/
-        make defconfig
+      - name: Prepare SDK & Copy package
+        run: |
+          cd buildroot/sdk
+          mkdir -p package/luci-app-routewatch
+          rsync -av --exclude 'buildroot' --exclude '.github' $GITHUB_WORKSPACE/ package/luci-app-routewatch/
+          make defconfig
 
-    - name: Build IPK
-      run: |
-        cd buildroot/sdk
-        make package/luci-app-routewatch/compile -j$(nproc) V=s
+      - name: Build IPK
+        run: |
+          cd buildroot/sdk
+          make package/luci-app-routewatch/compile -j$(nproc) V=s
 
-    - name: Prepare publish artifacts
-      run: |
-        mkdir -p publish
-        find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
-        cd publish
-        apt-get update && apt-get install -y opkg-utils
-        opkg-make-index . > Packages
-        gzip -k Packages
+      - name: Prepare publish artifacts
+        run: |
+          mkdir -p publish
+          find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
+          cd publish
+          apt-get update && apt-get install -y opkg-utils
+          opkg-make-index . > Packages
+          gzip -k Packages
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: ./publish
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./publish
