@@ -25,6 +25,7 @@ jobs:
 
       - name: Debug package folder
         run: |
+          ls -l buildroot/sdk/
           ls -l buildroot/sdk/package/
           ls -l buildroot/sdk/package/luci-app-routewatch/
 
