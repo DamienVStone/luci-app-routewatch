@@ -27,7 +27,7 @@ jobs:
         run: |
           cd buildroot/sdk
           mkdir -p package/luci-app-routewatch
-          rsync -av --exclude 'buildroot' --exclude '.github' $GITHUB_WORKSPACE/buildroot/main package/luci-app-routewatch/
+          rsync -av --exclude 'buildroot' --exclude '.github' $GITHUB_WORKSPACE/main package/luci-app-routewatch/
 
       - name: Debug package folder
         run: |
