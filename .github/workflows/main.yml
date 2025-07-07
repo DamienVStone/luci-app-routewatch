@@ -23,6 +23,11 @@ jobs:
           mkdir sdk
           mv openwrt-sdk-* sdk
 
+      - name: Debug package folder
+        run: |
+          ls -l buildroot/sdk/package/
+          ls -l buildroot/sdk/package/luci-app-routewatch/
+
       - name: Prepare SDK & Copy package
         run: |
           cd buildroot/sdk
