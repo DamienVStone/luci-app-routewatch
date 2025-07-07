@@ -28,7 +28,7 @@ jobs:
           cd buildroot/sdk
           mkdir -p package/luci-app-routewatch
           rsync -av --exclude 'buildroot' --exclude '.github' $GITHUB_WORKSPACE/ package/luci-app-routewatch/
-          make defconfig
+          # Убираем make defconfig
 
       - name: Build IPK
         run: |
