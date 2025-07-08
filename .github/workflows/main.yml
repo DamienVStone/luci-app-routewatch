@@ -1,4 +1,3 @@
-# .github/workflows/build.yml
 name: Build luci-app-routewatch
 
 on:
@@ -11,60 +10,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout luci-app-routewatch
         uses: actions/checkout@v3
 
-      - name: Set up OpenWRT SDK
+      - name: Clone full OpenWrt source
         run: |
-          mkdir buildroot
+          git clone https://git.openwrt.org/openwrt/openwrt.git --branch v24.10.0 --depth 1 buildroot
+
+      - name: Set up feeds
+        run: |
           cd buildroot
-          wget https://downloads.openwrt.org/releases/24.10.0/targets/x86/64/openwrt-sdk-24.10.0-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-          tar -xf openwrt-sdk-*.tar.zst
-          mkdir sdk
-          mv openwrt-sdk-24.10.0-x86-64_gcc-13.3.0_musl.Linux-x86_64/* sdk
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
-      - name: Prepare SDK & Copy package
+      - name: Copy package into buildroot
         run: |
-          cd buildroot/sdk
-          mkdir -p package/luci-app-routewatch
-          rsync -av --exclude 'buildroot' --exclude '.github' $GITHUB_WORKSPACE/main/ package/luci-app-routewatch/
+          mkdir -p buildroot/package/luci-app-routewatch
+          rsync -av --exclude 'buildroot' --exclude '.github' ./ ./buildroot/package/luci-app-routewatch/
 
-      - name: Debug package folder
-        run: |
-          # ls -l $GITHUB_WORKSPACE/
-          ls -l buildroot/sdk/
-          ls -l buildroot/sdk/package/
-          # ls -l buildroot/sdk/package/luci-app-routewatch/
-          ls -l buildroot/sdk/scripts/
+      - name: Cache build downloads and build_dir
+        uses: actions/cache@v3
+        with:
+          path: |
+            buildroot/dl
+            buildroot/build_dir
+          key: ${{ runner.os }}-openwrt-v24.10.0-${{ hashFiles('**/.config') }}
 
-      - name: Update and install feeds
+      - name: Configure OpenWrt build
         run: |
-          $GITHUB_WORKSPACE/buildroot/sdk/scripts/feeds update -a
-          $GITHUB_WORKSPACE/buildroot/sdk/scripts/feeds install -a
-
-      - name: Build IPK
-        run: |
-          cp $GITHUB_WORKSPACE/.config buildroot/sdk/.config
-          cd buildroot/sdk
+          cp .config buildroot/.config
+          cd buildroot
           make defconfig
+
+      - name: Build luci-app-routewatch
+        run: |
+          cd buildroot
           make package/luci-app-routewatch/compile -j$(nproc) V=s
 
-      - name: Prepare IPK files and index
+      - name: Prepare IPK and generate index
         run: |
           mkdir -p publish
-
-          # Копируем IPK-пакеты
-          find buildroot/sdk/bin/packages/ -name "luci-app-routewatch*.ipk" -exec cp {} publish/ \;
-
-          echo "=== IPK files ==="
-          ls -l publish/
-          file publish/*
-
-          # Используем встроенный скрипт SDK для генерации индекса
-          cp buildroot/sdk/scripts/gen_packages.py publish/
-          cd publish
-          python3 gen_packages.py . > Packages
-          gzip -k Packages
+          cp buildroot/bin/packages/*/luci/luci-app-routewatch*.ipk publish/
+          
+          echo "=== IPK FILES ==="
+          ls -l publish
+          
+          cd buildroot
+          python3 ./scripts/gen_packages.py ../publish > ../publish/Packages
+          gzip -k ../publish/Packages
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
