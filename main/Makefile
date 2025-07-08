@@ -8,3 +8,5 @@ include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
 $(eval $(call BuildPackage,luci-app-routewatch))
+
+package-$(CONFIG_PACKAGE_luci-app-routewatch) += luci-app-routewatch
